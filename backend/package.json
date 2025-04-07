@@ -1,0 +1,26 @@
+{
+  "name": "high5-backend",
+  "version": "1.0.0",
+  "description": "Agentic backend for High5 application",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "serverless",
+    "aws",
+    "lambda",
+    "agentic"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "aws-sdk": "^2.1473.0",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "serverless": "^3.34.0",
+    "serverless-iam-roles-per-function": "^3.2.0",
+    "serverless-offline": "^12.0.4"
+  }
+}

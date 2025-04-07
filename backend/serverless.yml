@@ -1,0 +1,92 @@
+service: high5-backend
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  stage: ${opt:stage, 'dev'}
+  region: ${opt:region, 'us-east-1'}
+  environment:
+    DYNAMODB_TABLE: ${self:service}-${self:provider.stage}
+
+plugins:
+  - serverless-iam-roles-per-function
+  - serverless-offline
+
+functions:
+  processMessage:
+    handler: functions/agent/processMessage.handler
+    events:
+      - http:
+          path: /agent/process
+          method: post
+          cors: true
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:Query
+          - dynamodb:Scan
+          - dynamodb:GetItem
+          - dynamodb:PutItem
+          - dynamodb:UpdateItem
+          - dynamodb:DeleteItem
+        Resource: !GetAtt MessagesTable.Arn
+
+  generateUI:
+    handler: functions/ui-generator/generateUI.handler
+    events:
+      - http:
+          path: /ui/generate
+          method: post
+          cors: true
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:Query
+          - dynamodb:Scan
+          - dynamodb:GetItem
+        Resource: !GetAtt UIComponentsTable.Arn
+
+resources:
+  Resources:
+    MessagesTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.DYNAMODB_TABLE}-messages
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+          - AttributeName: conversationId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: conversationIdIndex
+            KeySchema:
+              - AttributeName: conversationId
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+
+    UIComponentsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.DYNAMODB_TABLE}-ui-components
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+          - AttributeName: type
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: typeIndex
+            KeySchema:
+              - AttributeName: type
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
